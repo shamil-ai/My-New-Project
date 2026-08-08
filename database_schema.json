@@ -1,0 +1,61 @@
+{
+  "photos": {
+    "photo_1": {
+      "title": "Annual Conference 2026",
+      "description": "Main stage presentation photo with full audience view.",
+      "category": "Events",
+      "imageUrl": "https://your-storage-link.com/photo1.jpg",
+      "tags": ["conference", "mainstage", "2026"],
+      "timestamp": "2026-08-08T10:00:00Z",
+      "isFeatured": true
+    }
+  },
+  "jerseys": {
+    "jersey_1": {
+      "playerName": "Muhammed Shamil",
+      "number": "10",
+      "team": "Red Hawks",
+      "category": "Senior",
+      "frontImageUrl": "https://your-storage-link.com/jersey_front.png",
+      "backImageUrl": "https://your-storage-link.com/jersey_back.png",
+      "status": "Approved"
+    }
+  },
+  "content": {
+    "post_1": {
+      "title": "Eid-ul-Fitr Special Program Announcement",
+      "body": "Join us for the special program...",
+      "category": "Notices",
+      "publishedDate": "2026-08-08",
+      "views": 1200
+    }
+  },
+  "overlays": {
+    "overlay_1": {
+      "name": "Manhajul Hidaya Logo Watermark",
+      "pngUrl": "https://your-storage-link.com/logo_transparent.png",
+      "defaultSize": 150,
+      "defaultOpacity": 0.8,
+      "isActive": true
+    }
+  },
+  "categories": {
+    "cat_1": {
+      "name": "News & Updates",
+      "icon": "📰",
+      "orderIndex": 1
+    },
+    "cat_2": {
+      "name": "Junior Football Team",
+      "icon": "👕",
+      "orderIndex": 2
+    }
+  },
+  "appSettings": {
+    "theme": {
+      "primaryColor": "#dc2626",
+      "isDarkMode": false,
+      "lastUpdated": "2026-08-08T10:20:00Z"
+    }
+  }
+}
