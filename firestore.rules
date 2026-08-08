@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // അഡ്മിൻ പാനലിലെ ഫോട്ടോകൾക്കുള്ള റൂൾ
+    match /photos/{photoId} {
+      allow read: if true; // മെയിൻ ആപ്പിലെ എല്ലാവർക്കും ഫോട്ടോകൾ കാണാം
+      // ലോഗിൻ ചെയ്ത അഡ്മിന് മാത്രം ഫോട്ടോകൾ ആഡ് ചെയ്യാനും ഡിലീറ്റ് ചെയ്യാനും സാധിക്കും
+      allow write, update, delete: if request.auth != null && request.auth.token.admin == true; 
+    }
+
+    // ജേഴ്സികൾക്കുള്ള റൂൾ
+    match /jerseys/{jerseyId} {
+      allow read: if true;
+      allow write, update, delete: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    // കണ്ടന്റുകൾക്കും (Texts) കാറ്റഗറികൾക്കുമുള്ള റൂൾ
+    match /content/{contentId} {
+      allow read: if true;
+      allow write, update, delete: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // PNG Overlays-നുള്ള റൂൾ
+    match /overlays/{overlayId} {
+      allow read: if true;
+      allow write, update, delete: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    // ആപ്പ് തീം സെറ്റിംഗ്സിനുള്ള റൂൾ
+    match /appSettings/{settingId} {
+      allow read: if true;
+      allow write, update, delete: if request.auth != null && request.auth.token.admin == true;
+    }
+  }
+}
