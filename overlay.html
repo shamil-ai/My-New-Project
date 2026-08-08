@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNG Overlay System - Admin Panel</title>
+    <style>
+        :root {
+            --primary: #dc2626;
+            --primary-dark: #b91c1c;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 30px; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+        .btn { background: var(--primary); color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn:hover { background: var(--primary-dark); }
+        .btn-outline { background: white; color: var(--primary); border: 1px solid var(--primary); }
+
+        /* Main Layout */
+        .workspace { display: flex; gap: 25px; flex-wrap: wrap; }
+        
+        /* Left: Preview Area */
+        .preview-section { flex: 2; min-width: 300px; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .preview-section h3 { margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        
+        .canvas-container { position: relative; width: 100%; height: 500px; background: #e5e7eb url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxyZWN0IHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0iI2QxZDVkOCIvPgo8cmVjdCB4PSIxMCIgeT0iMTAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0iI2QxZDVkOCIvPgo8L3N2Zz4=') repeat; border-radius: 8px; overflow: hidden; border: 2px dashed #9ca3af; display: flex; justify-content: center; align-items: center; }
+        
+        /* Images in preview */
+        #baseImage { max-width: 100%; max-height: 100%; object-fit: contain; position: relative; z-index: 1; display: none; }
+        #overlayImage { position: absolute; z-index: 2; width: 150px; cursor: move; display: none; transform-origin: center center; }
+        .placeholder-text { position: absolute; color: #6b7280; font-weight: 500; z-index: 0; }
+
+        /* Right: Controls Area */
+        .controls-section { flex: 1; min-width: 300px; background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 20px; }
+        
+        .upload-group { background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .upload-group label { display: block; font-weight: 600; margin-bottom: 10px; font-size: 0.9rem; }
+        .upload-group input[type="file"] { width: 100%; font-size: 0.85rem; cursor: pointer; }
+
+        .slider-group { display: flex; flex-direction: column; gap: 5px; }
+        .slider-group label { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; color: #4b5563; }
+        .slider-group input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--primary); }
+
+        hr { border: 0; border-top: 1px solid var(--border); margin: 5px 0; }
+        
+        svg { width: 18px; height: 18px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <h1>PNG Overlay & Frame System</h1>
+            <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 5px;">Auto compose normal photos with transparent PNG overlays perfectly.</p>
+        </div>
+        <button class="btn" onclick="generateFinalImage()">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Final Image
+        </button>
+    </div>
+
+    <div class="workspace">
+        <!-- Preview Workspace -->
+        <div class="preview-section">
+            <h3><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Live Preview Editor</h3>
+            <div class="canvas-container" id="previewBox">
+                <span class="placeholder-text" id="placeholder">Upload Base Photo & Overlay to begin</span>
+                <img id="baseImage" alt="Base Photo">
+                <img id="overlayImage" alt="PNG Overlay">
+            </div>
+        </div>
+
+        <!-- Editor Controls -->
+        <div class="controls-section">
+            <h3 style="margin-bottom: -10px;">Assets</h3>
+            
+            <div class="upload-group">
+                <label>1. Normal Photo (Base)</label>
+                <input type="file" id="baseInput" accept="image/jpeg, image/png, image/webp" onchange="loadBaseImage(event)">
+            </div>
+            
+            <div class="upload-group">
+                <label>2. Transparent PNG (Overlay)</label>
+                <input type="file" id="overlayInput" accept="image/png" onchange="loadOverlayImage(event)">
+            </div>
+
+            <hr>
+
+            <h3 style="margin-bottom: -10px;">Overlay Settings</h3>
+
+            <div class="slider-group">
+                <label><span>Size (Scale)</span> <span id="sizeVal">150px</span></label>
+                <input type="range" id="sizeSlider" min="50" max="800" value="150" oninput="updateOverlay()">
+            </div>
+
+            <div class="slider-group">
+                <label><span>Horizontal Position (X)</span> <span id="xVal">50%</span></label>
+                <input type="range" id="xSlider" min="0" max="100" value="50" oninput="updateOverlay()">
+            </div>
+
+            <div class="slider-group">
+                <label><span>Vertical Position (Y)</span> <span id="yVal">50%</span></label>
+                <input type="range" id="ySlider" min="0" max="100" value="50" oninput="updateOverlay()">
+            </div>
+
+            <div class="slider-group">
+                <label><span>Rotation</span> <span id="rotVal">0°</span></label>
+                <input type="range" id="rotSlider" min="-180" max="180" value="0" oninput="updateOverlay()">
+            </div>
+
+            <div class="slider-group">
+                <label><span>Opacity</span> <span id="opVal">100%</span></label>
+                <input type="range" id="opSlider" min="0" max="100" value="100" oninput="updateOverlay()">
+            </div>
+
+            <button class="btn btn-outline" style="width: 100%; justify-content: center; margin-top: 10px;" onclick="resetSettings()">
+                <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                Reset Settings
+            </button>
+        </div>
+    </div>
+
+    <!-- Hidden Canvas used for final image generation -->
+    <canvas id="exportCanvas" style="display: none;"></canvas>
+
+    <script>
+        const baseImg = document.getElementById('baseImage');
+        const overlayImg = document.getElementById('overlayImage');
+        const placeholder = document.getElementById('placeholder');
+        
+        // Settings elements
+        const sizeSlider = document.getElementById('sizeSlider');
+        const xSlider = document.getElementById('xSlider');
+        const ySlider = document.getElementById('ySlider');
+        const rotSlider = document.getElementById('rotSlider');
+        const opSlider = document.getElementById('opSlider');
+
+        function loadBaseImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                baseImg.src = URL.createObjectURL(file);
+                baseImg.style.display = 'block';
+                placeholder.style.display = 'none';
+                // Reset sizes when new image is loaded
+                baseImg.onload = () => { updateOverlay(); };
+            }
+        }
+
+        function loadOverlayImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                overlayImg.src = URL.createObjectURL(file);
+                overlayImg.style.display = 'block';
+                updateOverlay();
+            }
+        }
+
+        function updateOverlay() {
+            if (!overlayImg.src) return;
+
+            // Get values
+            const size = sizeSlider.value;
+            const x = xSlider.value;
+            const y = ySlider.value;
+            const rot = rotSlider.value;
+            const op = opSlider.value;
+
+            // Update UI Labels
+            document.getElementById('sizeVal').innerText = size + 'px';
+            document.getElementById('xVal').innerText = x + '%';
+            document.getElementById('yVal').innerText = y + '%';
+            document.getElementById('rotVal').innerText = rot + '°';
+            document.getElementById('opVal').innerText = op + '%';
+
+            // Apply CSS to overlay
+            overlayImg.style.width = size + 'px';
+            overlayImg.style.left = `calc(${x}% - ${size/2}px)`; 
+            overlayImg.style.top = `calc(${y}% - ${(overlayImg.offsetHeight || size)/2}px)`;
+            overlayImg.style.transform = `rotate(${rot}deg)`;
+            overlayImg.style.opacity = op / 100;
+        }
+
+        function resetSettings() {
+            sizeSlider.value = 150;
+            xSlider.value = 50;
+            ySlider.value = 50;
+            rotSlider.value = 0;
+            opSlider.value = 100;
+            updateOverlay();
+        }
+
+        // Real Canvas final image generation logic
+        function generateFinalImage() {
+            if (!baseImg.src || baseImg.style.display === 'none') {
+                alert("Please upload a base photo first!");
+                return;
+            }
+            if (!overlayImg.src || overlayImg.style.display === 'none') {
+                alert("Please upload an overlay PNG!");
+                return;
+            }
+
+            const canvas = document.getElementById('exportCanvas');
+            const ctx = canvas.getContext('2d');
+            const previewBox = document.getElementById('previewBox');
+
+            // 1. Set canvas size to match the base image's actual display size in the preview
+            const baseRect = baseImg.getBoundingClientRect();
+            const boxRect = previewBox.getBoundingClientRect();
+            
+            canvas.width = baseRect.width;
+            canvas.height = baseRect.height;
+
+            // 2. Draw base image
+            ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
+
+            // 3. Calculate overlay position relative to the base image
+            const overlayRect = overlayImg.getBoundingClientRect();
+            
+            // X and Y relative to the base image top-left
+            const relX = overlayRect.left - baseRect.left + (overlayRect.width / 2);
+            const relY = overlayRect.top - baseRect.top + (overlayRect.height / 2);
+
+            // 4. Draw overlay with transformations
+            ctx.save();
+            ctx.globalAlpha = opSlider.value / 100;
+            ctx.translate(relX, relY);
+            ctx.rotate((rotSlider.value * Math.PI) / 180);
+            
+            // Draw image centered at the translated point
+            ctx.drawImage(overlayImg, -overlayRect.width / 2, -overlayRect.height / 2, overlayRect.width, overlayRect.height);
+            ctx.restore();
+
+            // 5. Trigger download
+            const link = document.createElement('a');
+            link.download = 'Processed_Photo_Manhajul.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>
